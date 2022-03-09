@@ -1,0 +1,12 @@
+#ifndef BGMRPCCLIENT_GLOBAL_H
+#define BGMRPCCLIENT_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(BGMRPCCLIENT_LIBRARY)
+#  define BGMRPCCLIENT_EXPORT Q_DECL_EXPORT
+#else
+#  define BGMRPCCLIENT_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // BGMRPCCLIENT_GLOBAL_H
