@@ -13,7 +13,7 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Core WebSockets REQUIRED)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 
-include_directories(${BGMRPCCommon_includeDir})
+#include_directories(${BGMRPCCommon_includeDir})
 
 add_library(BGMRPCClient SHARED "")
 target_sources(
@@ -32,7 +32,7 @@ set_target_properties(
 
 target_link_libraries(
   BGMRPCClient PRIVATE Qt${QT_VERSION_MAJOR}::Core
-                       Qt${QT_VERSION_MAJOR}::WebSockets BGMRPCCommon)
+                       Qt${QT_VERSION_MAJOR}::WebSockets)
 
 install(TARGETS BGMRPCClient
         LIBRARY DESTINATION ${BGMRPC_CLIENT}/${CMAKE_INSTALL_LIBDIR}
