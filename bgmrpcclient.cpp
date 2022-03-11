@@ -103,7 +103,7 @@ Calling::Calling(BGMRPCClient* client, const QString& mID, QObject* parent)
             if (jsonDoc["mID"].toString() == m_mID) {
                 QObject::disconnect(m_client, &BGMRPCClient::returned, this, 0);
                 QObject::disconnect(m_client, &BGMRPCClient::error, this, 0);
-                m_errorCallback(jsonDoc.toVariant());
+                if (m_errorCallback) m_errorCallback(jsonDoc.toVariant());
                 deleteLater();
             }
         });
