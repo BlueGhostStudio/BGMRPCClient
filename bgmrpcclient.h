@@ -10,10 +10,11 @@
 #include <functional>
 
 #include "BGMRPCClient_global.h"
+#include "calling.h"
 
 namespace NS_BGMRPCClient {
 
-class BGMRPCClient;
+// class BGMRPCClient;
 
 /*class Calling : public QObject {
     Q_OBJECT
@@ -55,7 +56,7 @@ protected:
     static quint64 m_totalMID;
 };*/
 
-class BGMRPCCLIENT_EXPORT Calling : public QObject {
+/*class BGMRPCCLIENT_EXPORT Calling : public QObject {
     Q_OBJECT
 public:
     Calling(BGMRPCClient* client, const QString& mID,
@@ -69,16 +70,22 @@ private:
     QString m_mID;
     std::function<void(const QVariant&)> m_returnCallback;
     std::function<void(const QVariant&)> m_errorCallback;
-};
+};*/
 
 class BGMRPCCLIENT_EXPORT BGMRPCClient : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool isConnected READ isConnected NOTIFY isConnectedChanged)
+    Q_PROPERTY(int alive READ alive WRITE setAlive NOTIFY aliveChanged)
+
 public:
     BGMRPCClient(QObject* parent = nullptr);
     virtual ~BGMRPCClient() {}
 
     bool isConnected();
+
+    int alive() const;
+    void setAlive(int interval);
+
     void connectToHost(const QUrl& url);
     void disconnectFromHost();
 
@@ -87,6 +94,10 @@ public:
 
 signals:
     void isConnectedChanged(bool status);
+
+    void aliveChanged();
+    void pong();
+
     void stateChanged(QAbstractSocket::SocketState state);
     void connected();
     void disconnected();
@@ -94,12 +105,14 @@ signals:
     void returned(const QJsonDocument& jsonDoc);
     void error(const QJsonDocument& jsonDoc);
     void remoteSignal(const QString& obj, const QString& sig,
-                        const QJsonArray& args);
+                      const QJsonArray& args);
 
 private:
     friend Calling;
     QWebSocket m_socket;
     static quint64 m_totalMID;
+
+    int m_aliveInterval = -1;
 };
 }  // namespace NS_BGMRPCClient
 #endif  // BGMRPCCLIENT_H

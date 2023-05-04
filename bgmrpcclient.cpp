@@ -1,6 +1,7 @@
 #include "bgmrpcclient.h"
 
 #include <QDebug>
+#include <QTimer>
 
 using namespace NS_BGMRPCClient;
 
@@ -85,7 +86,7 @@ BGMRPCClient::callMethod(CallChain* callChain, const QString& object,
     m_socket.sendTextMessage(QJsonDocument::fromVariant(callVariant).toJson());
 }*/
 
-Calling::Calling(BGMRPCClient* client, const QString& mID, QObject* parent)
+/*Calling::Calling(BGMRPCClient* client, const QString& mID, QObject* parent)
     : QObject(parent), m_client(client), m_mID(mID) {
     QObject::connect(
         m_client, &BGMRPCClient::returned, this,
@@ -114,7 +115,7 @@ Calling::then(std::function<void(const QVariant&)> ret,
               std::function<void(const QVariant&)> err) {
     m_returnCallback = ret;
     m_errorCallback = err;
-}
+}*/
 
 quint64 BGMRPCClient::m_totalMID = 0;
 
@@ -123,6 +124,8 @@ BGMRPCClient::BGMRPCClient(QObject* parent) : QObject(parent) {
         &m_socket, &QWebSocket::stateChanged, this,
         [=](QAbstractSocket::SocketState state) {
             emit isConnectedChanged(state == QAbstractSocket::ConnectedState);
+            if (state == QAbstractSocket::ConnectedState && m_aliveInterval > 0)
+                m_socket.ping();
         });
     QObject::connect(&m_socket, &QWebSocket::stateChanged, this,
                      &BGMRPCClient::stateChanged);
@@ -145,11 +148,32 @@ BGMRPCClient::BGMRPCClient(QObject* parent) : QObject(parent) {
                                                jsonDoc["signal"].toString(),
                                                jsonDoc["args"].toArray());
                      });
+
+    QObject::connect(
+        &m_socket, &QWebSocket::pong, this, [=](quint64 elapsedTime) {
+            emit pong();
+            qDebug() << "pong after " << elapsedTime;
+            QTimer::singleShot(qMax<int>(1000 - elapsedTime, 0), [=]() {
+                if (m_aliveInterval > 0) m_socket.ping();
+            });
+        });
 }
 
 bool
 BGMRPCClient::isConnected() {
     return m_socket.state() == QAbstractSocket::ConnectedState;
+}
+
+int
+BGMRPCClient::alive() const {
+    return m_aliveInterval;
+}
+
+void
+BGMRPCClient::setAlive(int interval) {
+    m_aliveInterval = interval;
+
+    emit aliveChanged();
 }
 
 void

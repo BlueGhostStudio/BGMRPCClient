@@ -18,7 +18,7 @@ set(CMAKE_AUTOMOC ON)
 add_library(BGMRPCClient SHARED "")
 target_sources(
   BGMRPCClient
-  PRIVATE BGMRPCClient_global.h bgmrpcclient.cpp
+  PRIVATE BGMRPCClient_global.h bgmrpcclient.cpp calling.h calling.cpp
   PUBLIC bgmrpcclient.h)
 
 set_target_properties(
