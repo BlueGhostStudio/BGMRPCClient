@@ -124,8 +124,11 @@ BGMRPCClient::BGMRPCClient(QObject* parent) : QObject(parent) {
         &m_socket, &QWebSocket::stateChanged, this,
         [=](QAbstractSocket::SocketState state) {
             emit isConnectedChanged(state == QAbstractSocket::ConnectedState);
-            if (state == QAbstractSocket::ConnectedState && m_aliveInterval > 0)
+            if (state == QAbstractSocket::ConnectedState &&
+                m_aliveInterval > 0) {
                 m_socket.ping();
+                emit ping();
+            }
         });
     QObject::connect(&m_socket, &QWebSocket::stateChanged, this,
                      &BGMRPCClient::stateChanged);
@@ -152,10 +155,13 @@ BGMRPCClient::BGMRPCClient(QObject* parent) : QObject(parent) {
     QObject::connect(
         &m_socket, &QWebSocket::pong, this, [=](quint64 elapsedTime) {
             emit pong();
-            qDebug() << "pong after " << elapsedTime;
-            QTimer::singleShot(qMax<int>(1000 - elapsedTime, 0), [=]() {
-                if (m_aliveInterval > 0) m_socket.ping();
-            });
+            if (m_aliveInterval > 0) {
+                QTimer::singleShot(qMax<int>(m_aliveInterval - elapsedTime, 0),
+                                   [=]() {
+                                       m_socket.ping();
+                                       emit ping();
+                                   });
+            }
         });
 }
 

@@ -96,6 +96,7 @@ signals:
     void isConnectedChanged(bool status);
 
     void aliveChanged();
+    void ping();
     void pong();
 
     void stateChanged(QAbstractSocket::SocketState state);
