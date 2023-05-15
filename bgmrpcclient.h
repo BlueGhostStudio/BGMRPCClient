@@ -76,6 +76,8 @@ class BGMRPCCLIENT_EXPORT BGMRPCClient : public QObject {
     Q_OBJECT
     Q_PROPERTY(bool isConnected READ isConnected NOTIFY isConnectedChanged)
     Q_PROPERTY(int alive READ alive WRITE setAlive NOTIFY aliveChanged)
+    Q_PROPERTY(bool isReconnected READ isReconnected WRITE setReconnected NOTIFY
+                   reconnectedChanged)
 
 public:
     BGMRPCClient(QObject* parent = nullptr);
@@ -86,18 +88,24 @@ public:
     int alive() const;
     void setAlive(int interval);
 
+    bool isReconnected() const;
+    void setReconnected(bool r);
+
     void connectToHost(const QUrl& url);
+    void connectToHost();
     void disconnectFromHost();
 
     Calling* callMethod(const QString& object, const QString& method,
                         const QVariantList& args);
 
 signals:
-    void isConnectedChanged(bool status);
+    void isConnectedChanged(bool status, bool reconnected);
 
     void aliveChanged();
     void ping();
     void pong();
+
+    void reconnectedChanged();
 
     void stateChanged(QAbstractSocket::SocketState state);
     void connected();
@@ -114,6 +122,9 @@ private:
     static quint64 m_totalMID;
 
     int m_aliveInterval = -1;
+
+    bool m_reconnected = false;
+    QUrl m_host;
 };
 }  // namespace NS_BGMRPCClient
 #endif  // BGMRPCCLIENT_H

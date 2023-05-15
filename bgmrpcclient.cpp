@@ -120,16 +120,20 @@ Calling::then(std::function<void(const QVariant&)> ret,
 quint64 BGMRPCClient::m_totalMID = 0;
 
 BGMRPCClient::BGMRPCClient(QObject* parent) : QObject(parent) {
-    QObject::connect(
-        &m_socket, &QWebSocket::stateChanged, this,
-        [=](QAbstractSocket::SocketState state) {
-            emit isConnectedChanged(state == QAbstractSocket::ConnectedState);
-            if (state == QAbstractSocket::ConnectedState &&
-                m_aliveInterval > 0) {
-                m_socket.ping();
-                emit ping();
-            }
-        });
+    QObject::connect(&m_socket, &QWebSocket::stateChanged, this,
+                     [=](QAbstractSocket::SocketState state) {
+                         emit isConnectedChanged(
+                             state == QAbstractSocket::ConnectedState,
+                             m_reconnected);
+                         if (state == QAbstractSocket::ConnectedState)
+                             m_reconnected = true;
+
+                         if (state == QAbstractSocket::ConnectedState &&
+                             m_aliveInterval > 0) {
+                             m_socket.ping();
+                             emit ping();
+                         }
+                     });
     QObject::connect(&m_socket, &QWebSocket::stateChanged, this,
                      &BGMRPCClient::stateChanged);
     QObject::connect(&m_socket, &QWebSocket::connected, this,
@@ -182,6 +186,17 @@ BGMRPCClient::setAlive(int interval) {
     emit aliveChanged();
 }
 
+bool
+BGMRPCClient::isReconnected() const {
+    return m_reconnected;
+}
+
+void
+BGMRPCClient::setReconnected(bool r) {
+    m_reconnected = r;
+    emit reconnectedChanged();
+}
+
 void
 BGMRPCClient::connectToHost(const QUrl& url) {
     if (url.scheme() == "wss") {
@@ -191,11 +206,23 @@ BGMRPCClient::connectToHost(const QUrl& url) {
         m_socket.setSslConfiguration(conf);
     }
 
+    m_reconnected = false;
+    m_host = url;
     m_socket.open(url);
 }
 
 void
+BGMRPCClient::connectToHost() {
+    if (!m_host.isEmpty()) {
+        m_socket.abort();
+        connectToHost(m_host);
+    }
+}
+
+void
 BGMRPCClient::disconnectFromHost() {
+    m_reconnected = false;
+    m_host.clear();
     m_socket.close();
 }
 
