@@ -186,6 +186,11 @@ BGMRPCClient::setAlive(int interval) {
     emit aliveChanged();
 }
 
+void
+BGMRPCClient::sendPing() {
+    if (m_aliveInterval < 0) m_socket.ping();
+}
+
 bool
 BGMRPCClient::isReconnected() const {
     return m_reconnected;

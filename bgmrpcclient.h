@@ -87,6 +87,7 @@ public:
 
     int alive() const;
     void setAlive(int interval);
+    void sendPing();
 
     bool isReconnected() const;
     void setReconnected(bool r);
